@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashCards — ReDI Study App</title>
+  <!--
+    ARCHITECTURE: Single HTML file with multiple <section> "views".
+    Only one view is visible at a time (toggled via .active CSS class).
+    This keeps all JS state in one scope — no cross-page communication needed.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <button class="logo-btn" id="btn-home" aria-label="Go to deck manager">
+      <span class="logo-icon" aria-hidden="true">◈</span>
+      <span class="logo-text">FlashCards</span>
+    </button>
+    <span class="header-badge">ReDI School</span>
+  </header>
+
+  <!-- Screen-reader live region for dynamic state announcements -->
+  <div class="sr-only" aria-live="polite" id="live-region"></div>
+
+  <main id="app">
+
+    <!-- ═══════════════════════════════════════════════════
+         VIEW: MANAGE DECK
+    ════════════════════════════════════════════════════ -->
+    <section id="view-manage" class="view" aria-label="Manage your deck">
+      <div class="manage-layout">
+
+        <div class="deck-panel">
+          <div class="panel-header">
+            <h1>Your Deck</h1>
+            <span class="card-count" id="card-count" aria-live="polite">0 cards</span>
+          </div>
+          <div class="deck-empty" id="deck-empty" hidden>
+            <p>No cards yet.</p>
+            <p>Add your first card using the form →</p>
+          </div>
+          <ul class="card-list" id="card-list" aria-label="Cards in your deck"></ul>
+        </div>
+
+        <aside class="action-panel" aria-label="Add cards and start a session">
+
+          <form id="add-card-form" class="action-box add-form" novalidate aria-label="Add a new card">
+            <h2>Add a Card</h2>
+            <div class="form-group">
+              <label for="input-question">Question</label>
+              <textarea id="input-question" name="question"
+                placeholder="e.g. What does DOM stand for?"
+                rows="3" required aria-required="true"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="input-answer">Answer</label>
+              <textarea id="input-answer" name="answer"
+                placeholder="e.g. Document Object Model"
+                rows="3" required aria-required="true"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">+ Add Card</button>
+          </form>
+
+          <div class="action-box">
+            <h2>Start Studying</h2>
+            <button class="btn btn-accent" id="btn-start-solo" disabled>Solo Session</button>
+            <button class="btn btn-outline" id="btn-start-two" disabled>Two Players ✦</button>
+          </div>
+
+          <div class="action-box action-box-sm">
+            <h3>Deck I/O</h3>
+            <div class="io-row">
+              <button class="btn btn-small" id="btn-export">↓ Export JSON</button>
+              <label class="btn btn-small" for="input-import">↑ Import JSON</label>
+              <input type="file" id="input-import" accept=".json"
+                     class="sr-only" aria-label="Import deck from a JSON file">
+            </div>
+          </div>
+
+        </aside>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         VIEW: STUDY SESSION (single-player)
+    ════════════════════════════════════════════════════ -->
+    <section id="view-study" class="view" aria-label="Study session">
+      <div class="study-layout">
+
+        <div class="study-topbar">
+          <div class="progress-wrap">
+            <div class="progress-bar" id="progress-bar"
+                 role="progressbar" aria-label="Study progress"
+                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-label" id="progress-label" aria-live="polite">1 / 5</span>
+          </div>
+          <div class="study-score" id="study-score" aria-live="polite">
+            <span class="score-correct">✓ 0</span>
+            <span class="score-incorrect">✗ 0</span>
+          </div>
+        </div>
+
+        <!--
+          CARD FLIP STRUCTURE:
+          .card-scene  — provides the 3D perspective (like camera distance)
+          .card-inner  — the element that actually rotates; adding .flipped spins it 180°
+          .card-front  — visible by default (backface-visibility: hidden hides it when rotated)
+          .card-back   — pre-rotated 180° so it starts hidden, visible once inner is flipped
+        -->
+        <div class="card-scene" id="card-scene"
+             role="button" tabindex="0"
+             aria-label="Flashcard — click or press Space to reveal answer">
+          <div class="card-inner" id="card-inner">
+            <div class="card-face card-front">
+              <span class="card-label">Question</span>
+              <p class="card-text" id="card-question-text"></p>
+              <span class="card-hint">click · space · enter to flip</span>
+            </div>
+            <div class="card-face card-back">
+              <span class="card-label">Answer</span>
+              <p class="card-text" id="card-answer-text"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="study-controls" id="study-controls" aria-label="Mark your answer">
+          <button class="btn btn-incorrect" id="btn-incorrect"
+                  aria-label="Mark incorrect — Left arrow">
+            ✗ Incorrect <kbd>←</kbd>
+          </button>
+          <button class="btn btn-correct" id="btn-correct"
+                  aria-label="Mark correct — Right arrow">
+            ✓ Correct <kbd>→</kbd>
+          </button>
+        </div>
+
+        <button class="btn btn-ghost study-back" id="btn-end-study">← Back to Deck</button>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         VIEW: TWO-PLAYER SETUP
+    ════════════════════════════════════════════════════ -->
+    <section id="view-two-setup" class="view" aria-label="Two-player setup">
+      <div class="center-layout">
+        <h1>Two-Player Mode</h1>
+        <p class="subtitle">Take turns with the same deck. Each player self-marks correct or incorrect. Most correct answers wins!</p>
+
+        <form id="two-player-form" class="setup-form" novalidate aria-label="Enter player names">
+          <div class="player-inputs">
+            <div class="form-group">
+              <label for="p1-name">Player 1</label>
+              <input type="text" id="p1-name" value="Player 1" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+              <label for="p2-name">Player 2</label>
+              <input type="text" id="p2-name" value="Player 2" autocomplete="off" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-accent btn-large">Start Game</button>
+        </form>
+
+        <button class="btn btn-ghost" id="btn-cancel-setup">← Back</button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         VIEW: TWO-PLAYER SESSION
+    ════════════════════════════════════════════════════ -->
+    <section id="view-two-play" class="view" aria-label="Two-player session">
+      <div class="study-layout">
+
+        <div class="two-banner">
+          <span class="player-badge" id="player-badge">Player 1's turn</span>
+          <div class="two-scores">
+            <span id="p1-score-disp">Player 1: 0</span>
+            <span class="score-sep" aria-hidden="true">|</span>
+            <span id="p2-score-disp">Player 2: 0</span>
+          </div>
+        </div>
+
+        <div class="progress-wrap" style="width:100%;max-width:560px;">
+          <div class="progress-bar" id="two-progress-bar"
+               role="progressbar" aria-label="Game progress"
+               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="two-progress-fill"></div>
+          </div>
+          <span class="progress-label" id="two-progress-label" aria-live="polite">Card 1 of 5</span>
+        </div>
+
+        <div class="card-scene" id="two-card-scene"
+             role="button" tabindex="0"
+             aria-label="Flashcard — click or press Space to reveal answer">
+          <div class="card-inner" id="two-card-inner">
+            <div class="card-face card-front">
+              <span class="card-label">Question</span>
+              <p class="card-text" id="two-question-text"></p>
+              <span class="card-hint">click · space · enter to flip</span>
+            </div>
+            <div class="card-face card-back">
+              <span class="card-label">Answer</span>
+              <p class="card-text" id="two-answer-text"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="study-controls" id="two-controls" aria-label="Mark your answer">
+          <button class="btn btn-incorrect" id="two-btn-incorrect"
+                  aria-label="Mark incorrect — Left arrow">
+            ✗ Wrong <kbd>←</kbd>
+          </button>
+          <button class="btn btn-correct" id="two-btn-correct"
+                  aria-label="Mark correct — Right arrow">
+            ✓ Got it <kbd>→</kbd>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         VIEW: RESULTS
+    ════════════════════════════════════════════════════ -->
+    <section id="view-results" class="view" aria-label="Session results">
+      <div class="center-layout">
+        <div class="trophy" id="trophy" aria-hidden="true">🏆</div>
+        <h1 id="results-title">Session Complete!</h1>
+        <p class="subtitle" id="results-subtitle"></p>
+        <div class="results-table" id="results-scores" aria-live="polite"></div>
+        <div class="results-actions">
+          <button class="btn btn-accent" id="btn-study-again">Study Again</button>
+          <button class="btn btn-outline" id="btn-results-home">Back to Deck</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

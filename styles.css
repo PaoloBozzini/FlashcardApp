@@ -1,0 +1,856 @@
+/* ================================================================
+   DESIGN TOKENS — change these variables to retheme the whole app
+   ================================================================ */
+:root {                                                                                                                                     
+    /* Backgrounds */                                                                                                                         
+    --bg:              #FAF7F2;   /* warm cream */                                                                                            
+    --surface:         #FFFFFF;   /* clean white card */                                                                                      
+    --surface-alt:     #F1ECE3;   /* subtle taupe */                                                                                        
+                                                                                                                                              
+    /* Borders */                                                                                                                           
+    --border:          #D9D2C5;                                                                                                               
+    --border-light:    #ECE6D9;                                                                                                               
+   
+    /* Card faces */                                                                                                                          
+    --card-bg:         #FFFEFA;   /* near-white front */                                                                                    
+    --card-border:     #E4DCC9;                                                                                                               
+    --card-back-bg:    #2F6F54;   /* deep sage back */                                                                                        
+    --card-back-text:  #FAF7F2;                                                                                                               
+                                                                                                                                              
+    /* Text */                                                                                                                                
+    --text-primary:    #1F2422;                                                                                                             
+    --text-secondary:  #4A524E;                                                                                                               
+    --text-muted:      #8A8F89;
+    --text-dark:       #1A2A20;                                                                                                               
+                                                                                                                                            
+    /* Accent — warm gold */                                                                                                                  
+    --accent:          #C8954A;                                                                                                             
+    --accent-hover:    #A77733;                                                                                                               
+   
+    /* Feedback */                                                                                                                            
+    --correct:         #4B9E73;                                                                                                             
+    --correct-light:   #DCEFE3;                                                                                                               
+    --incorrect:       #C26458;                                                                                                               
+    --incorrect-light: #F4DCD8;                                                                                                               
+                                                                                                                                              
+    /* Players */ 
+    --p1-color:        #4A8BD4;                                                                                                               
+    --p2-color:        #A37AD6;
+                                                                                                                                              
+    /* Shape */
+    --radius:          12px;                                                                                                                  
+    --radius-sm:       8px;
+    --radius-lg:       22px;                                                                                                                  
+   
+    /* Shadows — soft, not heavy */                                                                                                           
+    --shadow-card:     0 12px 32px rgba(40,30,15,0.10), 0 2px 6px rgba(40,30,15,0.06);
+                                                                                                                                              
+    /* Typography */
+    --font-display:    'Playfair Display', Georgia, serif;                                                                                    
+    --font-ui:         'DM Sans', system-ui, sans-serif;
+  }
+
+/* ================================================================
+   RESET + BASE
+   ================================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus ring — important for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Visually hidden but available to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ================================================================
+   APP HEADER
+   ================================================================ */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+.logo-btn:hover { color: var(--accent); }
+
+.logo-icon {
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+
+.header-badge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ================================================================
+   VIEWS — show/hide with .active
+   ================================================================ */
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+  animation: viewIn 0.22s ease;
+}
+
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   MANAGE VIEW — deck list + action panel
+   ================================================================ */
+.manage-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 16px;
+}
+
+@media (min-width: 760px) {
+  .manage-layout {
+    grid-template-columns: 1fr 360px;
+    gap: 36px;
+    padding: 40px 32px;
+    align-items: start;
+  }
+}
+
+/* — Deck panel — */
+.deck-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-header h1 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.card-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.deck-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-secondary);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  line-height: 2.2;
+}
+
+.card-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.card-list-item:hover { border-color: var(--border-light); }
+
+/* Slide-in animation when a new card is added */
+.card-list-item.card-added {
+  animation: listItemIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes listItemIn {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.card-num {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  min-width: 22px;
+}
+
+.card-q {
+  flex: 1;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-delete {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  transition: all 0.15s;
+}
+.btn-delete:hover {
+  background: rgba(192,82,72,0.15);
+  color: var(--incorrect);
+}
+
+/* — Action panel — */
+.action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 760px) {
+  .action-panel {
+    position: sticky;
+    top: 76px;
+  }
+}
+
+.action-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-box h2 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.action-box-sm {
+  padding: 16px 20px;
+  gap: 10px;
+}
+
+.action-box-sm h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.io-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Form styles */
+.add-form h2 {
+  margin-bottom: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.form-group textarea,
+.form-group input[type="text"] {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  resize: vertical;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.form-group textarea:focus,
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #1A0F00;
+  width: 100%;
+  padding: 12px;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #1A0F00;
+  padding: 13px 22px;
+  font-size: 0.95rem;
+}
+.btn-accent:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: 13px 22px;
+  font-size: 0.95rem;
+}
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
+}
+
+.btn-small {
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.btn-small:hover { border-color: var(--border-light); }
+
+.btn-correct {
+  background: var(--correct);
+  color: #fff;
+  flex: 1;
+  font-size: 0.95rem;
+  padding: 14px 20px;
+}
+.btn-correct:hover { background: var(--correct-light); transform: translateY(-1px); }
+
+.btn-incorrect {
+  background: var(--incorrect);
+  color: #fff;
+  flex: 1;
+  font-size: 0.95rem;
+  padding: 14px 20px;
+}
+.btn-incorrect:hover { background: var(--incorrect-light); transform: translateY(-1px); }
+
+.btn-large { padding: 15px 36px; font-size: 1.05rem; }
+
+kbd {
+  font-family: monospace;
+  font-size: 0.68em;
+  background: rgba(255,255,255,0.14);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* ================================================================
+   STUDY LAYOUT — shared by solo and two-player sessions
+   ================================================================ */
+.study-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 32px;
+  min-height: calc(100vh - 56px);
+  gap: 20px;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.study-topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.progress-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--surface);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  width: 0%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.study-score {
+  display: flex;
+  gap: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.score-correct  { color: var(--correct); }
+.score-incorrect { color: var(--incorrect); }
+
+.study-back { margin-top: auto; }
+
+/* ================================================================
+   FLASHCARD — 3D FLIP
+
+   How it works:
+   1. .card-scene  sets perspective — the "camera distance" from the card.
+      A larger value (1200px) means a subtler 3D effect.
+   2. .card-inner  is what rotates. transform-style: preserve-3d keeps
+      its children in 3D space so the rotation applies to them too.
+   3. Both faces sit at the same position (position: absolute, inset: 0).
+      backface-visibility: hidden makes each face invisible when it's
+      pointing away from the camera.
+   4. .card-back starts pre-rotated 180deg — so it faces away by default.
+   5. Adding .flipped to .card-inner rotates the whole thing 180deg.
+      Now the front faces away (hidden) and the back faces us (visible).
+   ================================================================ */
+.card-scene {
+  width: 100%;
+  max-width: 540px;
+  height: 280px;
+  perspective: 1200px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (min-width: 480px) {
+  .card-scene { height: 320px; }
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* cubic-bezier gives it a satisfying "snap" at the end of the flip */
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden; /* Safari needs the prefix */
+  box-shadow: var(--shadow-card);
+}
+
+.card-front {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-dark);
+}
+
+.card-back {
+  background: var(--card-back-bg);
+  border: 1px solid var(--border);
+  color: var(--card-back-text);
+  transform: rotateY(180deg); /* pre-rotated so it's hidden until flip */
+}
+
+.card-label {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  opacity: 0.4;
+}
+
+.card-text {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.55;
+  max-height: 70%;
+  overflow-y: auto;
+}
+
+@media (min-width: 480px) {
+  .card-text { font-size: 1.35rem; }
+}
+
+.card-hint {
+  position: absolute;
+  bottom: 14px;
+  font-size: 0.68rem;
+  opacity: 0.35;
+  letter-spacing: 0.06em;
+}
+
+/* — Between-card transition animations — */
+.card-scene.exiting {
+  animation: cardExit 0.22s ease forwards;
+}
+.card-scene.entering {
+  animation: cardEnter 0.24s ease forwards;
+}
+
+@keyframes cardExit {
+  to { opacity: 0; transform: translateX(-36px) scale(0.96); }
+}
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateX(36px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* ================================================================
+   STUDY CONTROLS — appear after card is flipped
+   ================================================================ */
+.study-controls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 540px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  /* visibility delay on hide prevents flash; removed on show */
+  transition: opacity 0.28s ease, transform 0.28s ease,
+              visibility 0s linear 0.28s;
+}
+
+.study-controls.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.28s ease, transform 0.28s ease,
+              visibility 0s;
+}
+
+/* ================================================================
+   TWO-PLAYER BANNER
+   ================================================================ */
+.two-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.player-badge {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--p1-color);
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 99px;
+  transition: background 0.3s ease;
+}
+
+.player-badge.p2 { background: var(--p2-color); }
+
+.two-scores {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.score-sep { opacity: 0.3; }
+
+/* ================================================================
+   SETUP / RESULTS CENTER LAYOUTS
+   ================================================================ */
+.center-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 48px 24px;
+  text-align: center;
+  gap: 24px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.center-layout h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 400px;
+}
+
+/* Setup form */
+.setup-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.player-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 380px) {
+  .player-inputs { grid-template-columns: 1fr; }
+}
+
+.setup-form input[type="text"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  padding: 13px 16px;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.setup-form input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Results */
+.trophy {
+  font-size: 4rem;
+  animation: trophyPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes trophyPop {
+  from { transform: scale(0) rotate(-15deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);  opacity: 1; }
+}
+
+.results-table {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+.result-row:last-child { border-bottom: none; }
+.result-row.result-total {
+  background: rgba(255,255,255,0.025);
+  font-weight: 700;
+}
+
+.result-num {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.results-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ================================================================
+   TOAST — brief feedback messages
+   ================================================================ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface-alt);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: 11px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+  z-index: 1000;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-success {
+  background: rgba(61, 158, 110, 0.12);
+  border-color: var(--correct);
+  color: var(--correct-light);
+}
+
+.toast-error {
+  background: rgba(192, 82, 72, 0.12);
+  border-color: var(--incorrect);
+  color: #E07870;
+}
